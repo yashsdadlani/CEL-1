@@ -1,0 +1,27 @@
+% Define the function
+F = @(x) x.^10 - 1;
+
+% Define the interval
+a = 0;
+b = 1;
+
+% Define the tolerance
+tol = 1e-6;
+
+% Perform bisection method
+while (b - a) / 2 > tol
+    c = (a + b) / 2;
+    if F(c) == 0
+        break;
+    elseif F(c) * F(a) < 0
+        b = c;
+    else
+        a = c;
+    end
+end
+
+% The root is the midpoint of the final interval
+root = (a + b) / 2;
+
+% Display the result
+fprintf('The root of the equation x^10 - 1 = 0 is approximately: %.8f\n', root);
