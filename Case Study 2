@@ -1,0 +1,73 @@
+% Define parameters
+L = 1; % Length of the square plate (m)
+W = 1; % Width of the square plate (m)
+k1 = 1; % Thermal conductivity of the left half (W/m*K)
+k2 = 2; % Thermal conductivity of the right half (W/m*K)
+q = 1000; % Heat source strength (W/m^2)
+total_time = 100; % Total simulation time (s)
+time_step = 0.1; % Time step (s)
+ambient_temperature = 25; % Ambient temperature (°C)
+
+% Grid parameters
+Nx = 50; % Number of nodes in x-direction
+Ny = 50; % Number of nodes in y-direction
+dx = L / (Nx - 1); % Grid spacing in x-direction
+dy = W / (Ny - 1); % Grid spacing in y-direction
+
+% Initialize temperature matrix
+T = ambient_temperature * ones(Ny, Nx);
+
+% Define thermal conductivities for each half of the plate
+k = ones(Ny, Nx);
+k(:, 1:Nx/2) = k1;
+k(:, Nx/2+1:Nx) = k2;
+
+% Define heat source location
+heat_source_x = Nx / 2;
+heat_source_y = Ny / 2;
+
+% Main time loop
+for t = 0:time_step:total_time
+    % Compute heat conduction using finite difference method
+    T_new = T;
+    for i = 2:Ny-1
+        for j = 2:Nx-1
+            % Compute Laplacian using central differences
+            Laplacian_T = (T(i-1,j) + T(i+1,j) - 4*T(i,j) + T(i,j-1) + T(i,j+1)) / (dx^2);
+            
+            % Compute heat conduction
+            q_conduction = k(i,j) * Laplacian_T;
+            
+            % Include heat source term at the middle of the plate
+            if i == heat_source_y && j == heat_source_x
+                q_conduction = q_conduction + q;
+            end
+            
+            % Update temperature using forward Euler method
+            T_new(i,j) = T(i,j) + q_conduction * time_step;
+        end
+    end
+    
+    % Update temperature matrix
+    T = T_new;
+    
+    % Apply boundary conditions
+    % Left and right boundaries (adiabatic)
+    T(:,1) = T(:,2);
+    T(:,Nx) = T(:,Nx-1);
+    % Top boundary (adiabatic)
+    T(1,:) = T(2,:);
+    % Bottom boundary (constant temperature)
+    T(Ny,:) = ambient_temperature;
+    
+    % Plot contour graph of temperature distribution
+    contourf(linspace(0, L, Nx), linspace(0, W, Ny), T, 50, 'LineColor', 'none');
+    colorbar;
+    xlabel('x (m)');
+    ylabel('y (m)');
+    title(['Temperature Distribution at t = ', num2str(t), ' s']);
+    axis equal;
+    xlim([0, L]);
+    ylim([0, W]);
+    pause(0.01);
+end
